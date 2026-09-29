@@ -3,10 +3,10 @@
 // Google doit être restreinte à l'adresse du site dans la console Google Cloud.
 window.APP_CONFIG = {
   // Identifiant d'application (client) obtenu lors de l'inscription dans Azure / Entra ID.
-  azureClientId: "A_RENSEIGNER",
+  azureClientId: "00d3179b-fa47-44e3-a6e0-dfef10660693",
 
-  // Clé API Google (Geocoding API, Places API (New), Routes API activées).
-  googleApiKey: "A_RENSEIGNER",
+  // Clé API Google (Maps JavaScript API, Geocoding API, Places API (New), Routes API activées).
+  googleApiKey: "AIzaSyC5Rt3Nj2q29Qs97vqxnb2wYsASdn9pCA0",
 
   // Dossier OneDrive où sont stockés parametres.json et Trajets_AAAA.csv.
   // Par défaut : le dossier réservé à l'appli (OneDrive > Applications > <nom de l'appli>).

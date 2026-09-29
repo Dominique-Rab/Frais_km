@@ -42,14 +42,37 @@ export function positionGPS() {
 
 export const coordonneesTexte = (p) => `${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`;
 
+// Le service web Geocoding refuse les clés restreintes à des sites web :
+// on passe par le Geocoder de l'API Maps JavaScript, chargée à la première utilisation.
+let chargementMaps = null;
+
+function chargerMapsJs() {
+  if (window.google?.maps?.importLibrary) return Promise.resolve();
+  if (!chargementMaps) {
+    chargementMaps = new Promise((ok, ko) => {
+      window.__fraisKmMapsPret = ok;
+      const s = document.createElement("script");
+      s.src =
+        "https://maps.googleapis.com/maps/api/js" +
+        `?key=${encodeURIComponent(cfg.googleApiKey)}&v=weekly&loading=async&language=fr&region=FR&callback=__fraisKmMapsPret`;
+      s.async = true;
+      s.onerror = () => {
+        chargementMaps = null;
+        s.remove();
+        ko(new Error("Google Maps injoignable."));
+      };
+      document.head.appendChild(s);
+    });
+  }
+  return chargementMaps;
+}
+
 async function adresse(p) {
-  const url =
-    "https://maps.googleapis.com/maps/api/geocode/json" +
-    `?latlng=${p.lat},${p.lng}&language=fr&key=${encodeURIComponent(cfg.googleApiKey)}`;
-  const r = await fetch(url);
-  const json = await r.json();
-  if (json.status !== "OK" || !json.results?.length) throw new Error(`Geocoding : ${json.status} ${json.error_message || ""}`);
-  return json.results[0].formatted_address.replace(/, France$/, "");
+  await chargerMapsJs();
+  const { Geocoder } = await google.maps.importLibrary("geocoding");
+  const { results } = await new Geocoder().geocode({ location: { lat: p.lat, lng: p.lng } });
+  if (!results?.length) throw new Error("Geocoding : aucune adresse.");
+  return results[0].formatted_address.replace(/, France$/, "");
 }
 
 async function lieuProche(p) {
