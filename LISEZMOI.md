@@ -35,13 +35,14 @@ Le GPS d'un téléphone ne fonctionne que sur un site en **HTTPS**, d'où cette 
 ## 3. Créer la clé Google Maps
 
 1. Ouvrez <https://console.cloud.google.com>, créez un projet et associez-y un compte de facturation. Une carte bancaire est obligatoire, mais le crédit mensuel gratuit couvre largement l'usage d'une PME.
-2. Dans *API et services → Bibliothèque*, activez ces 3 API :
+2. Dans *API et services → Bibliothèque*, activez ces 4 API :
+   - **Maps JavaScript API** (nécessaire pour le géocodage depuis le navigateur) ;
    - **Geocoding API** ;
    - **Places API (New)** ;
    - **Routes API**.
 3. Dans *Identifiants → Créer des identifiants → Clé API*, créez la clé puis modifiez-la :
    - Restrictions relatives aux applications : **Sites Web**, avec les adresses `https://votre-compte.github.io/*` et `http://localhost:8000/*`.
-   - Restrictions relatives aux API : les 3 API ci-dessus.
+   - Restrictions relatives aux API : les 4 API ci-dessus.
 4. Conseil : dans *Facturation → Budgets et alertes*, créez une alerte à 5 €.
 
 ## 4. Renseigner la configuration
