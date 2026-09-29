@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Frais km</title>
+  <meta name="theme-color" content="#1f5fa8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Frais km">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="style.css">
+  <script src="js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.28.1/lib/msal-browser.min.js"></script>
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Frais km</h1>
+    <button id="btn-statut" class="statut" type="button">…</button>
+  </header>
+
+  <nav>
+    <button data-vue="trajet" class="actif" type="button">Trajet</button>
+    <button data-vue="historique" type="button">Historique</button>
+    <button data-vue="parametres" type="button">Paramètres</button>
+  </nav>
+
+  <main>
+    <!-- Trajet -->
+    <section id="vue-trajet">
+      <label>Conducteur
+        <select id="sel-conducteur"></select>
+      </label>
+      <label>Véhicule
+        <select id="sel-vehicule"></select>
+      </label>
+
+      <div class="etape">
+        <button id="btn-demarrer" class="gros vert" type="button">▶ Démarrer</button>
+        <div id="info-depart" class="lieu" hidden>
+          <span class="heure" id="heure-depart"></span>
+          <input id="lieu-depart" aria-label="Lieu de départ">
+        </div>
+      </div>
+
+      <div class="etape">
+        <button id="btn-arrivee" class="gros rouge" type="button" disabled>■ Arrivée</button>
+        <div id="info-arrivee" class="lieu" hidden>
+          <span class="heure" id="heure-arrivee"></span>
+          <input id="lieu-arrivee" aria-label="Lieu d'arrivée">
+        </div>
+      </div>
+
+      <div id="bloc-resultat" class="resultat" hidden>
+        <label>Distance (km)
+          <input id="km" inputmode="decimal">
+        </label>
+        <div class="cout"><span>Coût</span><strong id="cout">–</strong></div>
+        <button id="btn-recalculer" class="lien" type="button">↻ Recalculer la distance</button>
+      </div>
+
+      <label for="commentaire">Objet du trajet</label>
+      <div class="commentaire">
+        <textarea id="commentaire" rows="3" placeholder="Ex. : visite client Dupont"></textarea>
+        <button id="btn-micro" class="micro" type="button" aria-label="Dicter le commentaire">🎤</button>
+      </div>
+
+      <button id="btn-enregistrer" class="gros bleu" type="button" disabled>Enregistrer le trajet</button>
+      <button id="btn-annuler" class="lien danger" type="button" hidden>Annuler ce trajet</button>
+      <p id="msg-trajet" class="msg" role="status"></p>
+    </section>
+
+    <!-- Historique -->
+    <section id="vue-historique" hidden>
+      <div class="barre">
+        <button id="btn-synchro" class="secondaire" type="button">☁ Envoyer vers OneDrive</button>
+        <button id="btn-export" class="secondaire" type="button">⬇ Exporter CSV</button>
+      </div>
+      <p id="msg-historique" class="msg" role="status"></p>
+      <ul id="liste-trajets" class="liste"></ul>
+    </section>
+
+    <!-- Paramètres -->
+    <section id="vue-parametres" hidden>
+      <div id="param-verrou">
+        <label>Code PIN du paramétrage
+          <input id="pin" type="password" inputmode="numeric" autocomplete="off">
+        </label>
+        <button id="btn-deverrouiller" class="gros bleu" type="button">Déverrouiller</button>
+        <p id="msg-pin" class="msg"></p>
+      </div>
+
+      <div id="param-contenu" hidden>
+        <h2>Compte Microsoft (OneDrive)</h2>
+        <p id="compte-info"></p>
+        <button id="btn-compte" class="secondaire" type="button"></button>
+
+        <h2>Conducteurs</h2>
+        <div id="liste-conducteurs"></div>
+        <button id="btn-ajout-conducteur" class="secondaire" type="button">+ Ajouter un conducteur</button>
+
+        <h2>Véhicules</h2>
+        <div id="liste-vehicules"></div>
+        <button id="btn-ajout-vehicule" class="secondaire" type="button">+ Ajouter un véhicule</button>
+
+        <h2>Barème kilométrique (€/km)</h2>
+        <label>Libellé <input id="bareme-libelle"></label>
+        <div id="bareme-tarifs" class="grille"></div>
+        <label>Majoration véhicule électrique (%)
+          <input id="bareme-elec" inputmode="decimal">
+        </label>
+
+        <h2>Sécurité</h2>
+        <label>Code PIN du paramétrage <input id="nouveau-pin" inputmode="numeric"></label>
+
+        <button id="btn-sauver-param" class="gros bleu" type="button">Enregistrer les paramètres</button>
+        <p id="msg-param" class="msg" role="status"></p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
