@@ -81,7 +81,9 @@ function afficherTrajet() {
     $("lieu-depart").value = t.depart.lieu;
   }
 
-  $("btn-arrivee").disabled = !t?.depart || !!t?.arrivee;
+  // Tant que le trajet n'est pas enregistré, un nouvel appui refait le relevé d'arrivée.
+  $("btn-arrivee").disabled = !t?.depart;
+  $("btn-arrivee").textContent = t?.arrivee ? "↻ Refaire l'arrivée" : "■ Arrivée";
   $("info-arrivee").hidden = !t?.arrivee;
   if (t?.arrivee) {
     $("heure-arrivee").textContent = `Arrivée ${heureFr(t.arrivee.heure)}`;
@@ -124,7 +126,11 @@ async function releverPoint() {
   } catch (e) {
     message(`Nom du lieu indisponible (${e.message}). Vous pouvez le saisir.`, "alerte");
   }
-  if (pos.precision > 100) message(`Position peu précise (± ${pos.precision} m).`, "alerte");
+  if (pos.ancienne) {
+    message("Position GPS peut-être ancienne : vérifiez le lieu, ou appuyez à nouveau sur le bouton.", "alerte");
+  } else if (pos.precision > 100) {
+    message(`Position peu précise (± ${pos.precision} m).`, "alerte");
+  }
   return point;
 }
 
@@ -166,8 +172,10 @@ async function arriver() {
   await occupe($("btn-arrivee"), "Localisation…", async () => {
     try {
       trajet.arrivee = await releverPoint();
+      trajet.km = null;
       ecrireTrajetEnCours(trajet);
       afficherTrajet();
+      $("btn-arrivee").disabled = true;
       $("btn-arrivee").textContent = "Calcul de la distance…";
       await calculerDistance();
     } catch (e) {

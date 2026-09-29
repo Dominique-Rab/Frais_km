@@ -7,10 +7,16 @@ export const googleConfigure = () => !!cfg.googleApiKey && !cfg.googleApiKey.sta
 
 // Suit la position jusqu'à obtenir la précision visée, ou jusqu'au délai max ;
 // renvoie alors la meilleure position reçue.
+// Quand l'appli sort de veille, iOS peut d'abord renvoyer la dernière position
+// connue (parfois vieille de plusieurs minutes) malgré maximumAge: 0 : les
+// positions datées d'avant l'appel sont écartées. Si aucune position récente
+// n'arrive, la meilleure ancienne est renvoyée avec ancienne = true.
 export function positionGPS() {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) return reject(new Error("GPS non disponible sur cet appareil."));
+    const debut = Date.now();
     let meilleure = null;
+    let meilleureAncienne = null;
     let fini = false;
     const terminer = (erreur) => {
       if (fini) return;
@@ -18,11 +24,18 @@ export function positionGPS() {
       navigator.geolocation.clearWatch(id);
       clearTimeout(minuteur);
       if (meilleure) resolve(meilleure);
+      else if (meilleureAncienne) resolve({ ...meilleureAncienne, ancienne: true });
       else reject(erreur || new Error("Position GPS introuvable."));
     };
     const id = navigator.geolocation.watchPosition(
       (p) => {
         const pos = { lat: p.coords.latitude, lng: p.coords.longitude, precision: Math.round(p.coords.accuracy) };
+        // Horodatage incohérent (écart > 1 jour) : on ne peut pas juger, la position est acceptée.
+        const recente = p.timestamp >= debut - 2000 || Math.abs(Date.now() - p.timestamp) > 86400000;
+        if (!recente) {
+          if (!meilleureAncienne || pos.precision < meilleureAncienne.precision) meilleureAncienne = pos;
+          return;
+        }
         if (!meilleure || pos.precision < meilleure.precision) meilleure = pos;
         if (pos.precision <= cfg.precisionGpsMetres) terminer();
       },
