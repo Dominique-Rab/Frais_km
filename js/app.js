@@ -190,7 +190,14 @@ async function enregistrer() {
   trajet.km = lireNombre($("km").value);
   trajet.commentaire = $("commentaire").value.trim();
   trajet.envoye = false;
-  await sauverTrajet(trajet);
+  const bouton = $("btn-enregistrer");
+  bouton.disabled = true;
+  try {
+    await sauverTrajet(trajet);
+  } catch (e) {
+    bouton.disabled = false;
+    return message(`Enregistrement impossible (${e.message}). Réessayez.`, "erreur");
+  }
   trajet = null;
   ecrireTrajetEnCours(null);
   $("commentaire").value = "";
@@ -552,7 +559,29 @@ function brancher() {
   document.addEventListener("visibilitychange", () => document.visibilityState === "visible" && synchroniser());
 }
 
+// Sur iPhone, l'appli installée et Safari ont des mémoires séparées (trajet en
+// cours, paramètres, connexion). Si l'appli tourne dans Safari (ou dans la
+// fenêtre Safari ouverte après la connexion Microsoft), on le signale.
+function signalerModeNavigateur() {
+  const installee = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  if (installee || !/iPhone|iPad|iPod/.test(navigator.userAgent)) return;
+  const bandeau = document.createElement("div");
+  bandeau.className = "bandeau";
+  bandeau.textContent =
+    "⚠ Mode navigateur : les données affichées ici sont séparées de celles de l'appli installée. " +
+    "Fermez cette fenêtre et ouvrez « Frais km » depuis l'écran d'accueil.";
+  document.body.prepend(bandeau);
+}
+
+// Toute erreur imprévue est affichée, pour ne jamais laisser un bouton sans effet visible.
+function afficherErreurs() {
+  const afficher = (e) => message(`Erreur : ${e?.message || e}`, "erreur");
+  window.addEventListener("error", (e) => afficher(e.error || e.message));
+  window.addEventListener("unhandledrejection", (e) => afficher(e.reason));
+}
+
 async function demarrerAppli() {
+  afficherErreurs();
   brancher();
   $("commentaire").value = localStorage.getItem(CLE_COMMENTAIRE) || "";
   afficherTrajet();
@@ -560,6 +589,8 @@ async function demarrerAppli() {
     message("Commencez par renseigner les conducteurs et les véhicules dans Paramètres (code initial : 0000).", "alerte");
   }
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(console.error);
+  navigator.storage?.persist?.().catch(() => {});
+  signalerModeNavigateur();
   try {
     await od.initAuth();
   } catch (e) {

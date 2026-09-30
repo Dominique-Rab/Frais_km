@@ -8,6 +8,9 @@ window.APP_CONFIG = {
   // Clé API Google (Maps JavaScript API, Geocoding API, Places API (New), Routes API activées).
   googleApiKey: "AIzaSyC5Rt3Nj2q29Qs97vqxnb2wYsASdn9pCA0",
 
+  // Compte Microsoft proposé d'office à la connexion (celui du OneDrive).
+  compteMicrosoft: "rabec.dominique@orange.fr",
+
   // Dossier OneDrive où sont stockés parametres.json et Trajets_AAAA.csv.
   // Par défaut : le dossier réservé à l'appli (OneDrive > Applications > <nom de l'appli>).
   // Autres exemples : "/me/drive/root:/Frais kilometriques"  (dossier de votre OneDrive)

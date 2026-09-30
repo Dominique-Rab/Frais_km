@@ -4,6 +4,10 @@
 const NOM_BASE = "fraiskm";
 const TABLE = "trajets";
 
+// Après un long passage en arrière-plan, iOS coupe la connexion à la base
+// (« Connection to Indexed Database server lost ») sans prévenir : toute
+// transaction échoue ensuite. On rouvre donc la base et on réessaie une fois,
+// avec un délai maximum pour ne jamais rester bloqué.
 let base = null;
 
 function ouvrir() {
@@ -11,19 +15,50 @@ function ouvrir() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(NOM_BASE, 1);
     req.onupgradeneeded = () => req.result.createObjectStore(TABLE, { keyPath: "id" });
-    req.onsuccess = () => resolve((base = req.result));
+    req.onsuccess = () => {
+      base = req.result;
+      base.onclose = () => (base = null);
+      base.onversionchange = () => {
+        base.close();
+        base = null;
+      };
+      resolve(base);
+    };
     req.onerror = () => reject(req.error);
+    req.onblocked = () => reject(new Error("Base de données bloquée."));
+  });
+}
+
+function transaction(db, mode, action) {
+  return new Promise((resolve, reject) => {
+    const minuteur = setTimeout(() => reject(new Error("Base de données : pas de réponse.")), 5000);
+    const fin = (f) => (v) => {
+      clearTimeout(minuteur);
+      f(v);
+    };
+    try {
+      const tx = db.transaction(TABLE, mode);
+      const req = action(tx.objectStore(TABLE));
+      tx.oncomplete = fin(() => resolve(req?.result));
+      tx.onerror = fin(() => reject(tx.error || new Error("Erreur de la base de données.")));
+      tx.onabort = fin(() => reject(tx.error || new Error("Opération annulée par la base de données.")));
+    } catch (e) {
+      fin(reject)(e);
+    }
   });
 }
 
 async function operation(mode, action) {
-  const db = await ouvrir();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(TABLE, mode);
-    const req = action(tx.objectStore(TABLE));
-    tx.oncomplete = () => resolve(req?.result);
-    tx.onerror = () => reject(tx.error);
-  });
+  try {
+    return await transaction(await ouvrir(), mode, action);
+  } catch (e) {
+    console.warn("Base de données : reconnexion", e);
+    try {
+      base?.close();
+    } catch {}
+    base = null;
+    return transaction(await ouvrir(), mode, action);
+  }
 }
 
 export const sauverTrajet = (trajet) => operation("readwrite", (t) => t.put(trajet));

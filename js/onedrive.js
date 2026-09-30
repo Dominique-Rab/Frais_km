@@ -33,14 +33,26 @@ export async function initAuth() {
   await app.initialize();
   const retour = await app.handleRedirectPromise();
   compte = retour?.account || app.getAllAccounts()[0] || null;
-  if (compte) app.setActiveAccount(compte);
+  if (compte) {
+    app.setActiveAccount(compte);
+    try {
+      localStorage.setItem(CLE_DERNIER_COMPTE, compte.username);
+    } catch {}
+  }
   return compte;
 }
 
+const CLE_DERNIER_COMPTE = "fraiskm.dernierCompte";
+
 // Redirection vers la page de connexion Microsoft (plus fiable qu'une fenêtre
-// popup dans une appli installée sur iPhone).
+// popup dans une appli installée sur iPhone). Le compte est pré-rempli et les
+// comptes professionnels (Deapak) écartés : pas d'écran « Choisir un compte ».
 export function connecter() {
-  return app.loginRedirect({ scopes: SCOPES, prompt: "select_account" });
+  let indice = cfg.compteMicrosoft || "";
+  try {
+    indice = localStorage.getItem(CLE_DERNIER_COMPTE) || indice;
+  } catch {}
+  return app.loginRedirect({ scopes: SCOPES, loginHint: indice || undefined, domainHint: "consumers" });
 }
 
 export function deconnecter() {
