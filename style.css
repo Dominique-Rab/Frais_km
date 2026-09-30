@@ -190,3 +190,11 @@ h2 { font-size: 1rem; margin: 12px 0 0; }
 .case { flex-direction: row; align-items: center; gap: 8px; }
 .case input { width: auto; }
 .grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
+
+.bandeau {
+  background: var(--orange);
+  color: #fff;
+  font-size: .85rem;
+  padding: calc(env(safe-area-inset-top) + 8px) 16px 8px;
+}
+.bandeau + header { padding-top: 10px; }
